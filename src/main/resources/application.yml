@@ -1,0 +1,5 @@
+
+
+security:
+  jwt:
+    secret-key: 59f26ead3567e2f6dcbf81c5671c2496b60c01304eff873f724df8429b0eded9
