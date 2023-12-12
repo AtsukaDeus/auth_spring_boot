@@ -4,12 +4,12 @@ import org.springframework.stereotype.Service;
 
 import com.base.authproject.configurations.Sha256;
 import com.base.authproject.jwt.JwtService;
-import com.base.authproject.role.Role;
+import com.base.authproject.user.Role;
 import com.base.authproject.user.UserMapper;
 import com.base.authproject.user.UserRegister;
 import com.base.authproject.user.UserRepository;
 import com.base.authproject.user.UserResponse;
-import com.base.authproject.user._User;
+import com.base.authproject.user.User;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,10 +23,10 @@ public class AuthService {
 
     public AuthResponse register(UserRegister userRegisterData){
 
-        _User user = _User.builder()
+        User user = User.builder()
             .username(userRegisterData.getUsername())
             .password(userRegisterData.getPassword())
-            .role(Role.USER) // USER or ADMIN
+            .role(Role.ROLE_USER) // USER or ADMIN
             .locked(false)
             .build();
         
