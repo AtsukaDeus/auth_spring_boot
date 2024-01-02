@@ -1,8 +1,10 @@
 package com.base.authproject.auth;
 
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.base.authproject.configurations.Sha256;
 import com.base.authproject.jwt.JwtService;
 import com.base.authproject.user.Role;
 import com.base.authproject.user.UserMapper;
@@ -18,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 public class AuthService {
     
     private final UserRepository userRepository;
+    private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
 
@@ -30,7 +34,7 @@ public class AuthService {
             .locked(false)
             .build();
         
-        user.setPassword(Sha256.hashString(user.getPassword()));
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         userRepository.save(user);
         var jwtToken = jwtService.generateToken(user);
@@ -43,33 +47,22 @@ public class AuthService {
 
 
     public AuthResponse login(AuthRequest authRequest){
-
-        var user = userRepository.findByUsername(authRequest.getUsername())
-                        .orElseThrow(null);
-        
-        if(
-            user == null ||
-            !(   
-                user.getUsername().equals(authRequest.getUsername()) &&
-                user.getPassword().equals(
-                    Sha256.hashString(authRequest.getPassword())
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        authRequest.getUsername(),
+                        authRequest.getPassword()
                 )
-            )
-        ) return null;
+        );
 
-        if(user.isAccountNonLocked()){
-            var jwtToken = jwtService.generateToken(user);
+        var user = userRepository.findByUsername(authRequest.getUsername()).orElseThrow();
+        var jwtToken = jwtService.generateToken(user);
 
-            UserResponse userResponse = new UserMapper().toResponse(user);
+        UserResponse userResponse = new UserMapper().toResponse(user);
 
-            return AuthResponse.builder()
-                    .token(jwtToken)
-                    .userResponse(userResponse)
-                    .build();
-        
-        } else{
-            return null;
-        }
+        return AuthResponse.builder()
+                .token(jwtToken)
+                .userResponse(userResponse)
+                .build();
 
     }
 
